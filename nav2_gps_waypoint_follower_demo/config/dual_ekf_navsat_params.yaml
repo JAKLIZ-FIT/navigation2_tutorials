@@ -2,10 +2,12 @@
 
 ekf_filter_node_odom:
   ros__parameters:
-    frequency: 30.0
+    frequency: 8.0
+    sensor_timeout: 1.0
     two_d_mode: true # Recommended to use 2d mode for nav2 in mostly planar environments
     print_diagnostics: true
-    debug: false
+    #debug: false
+    debug: true
     publish_tf: true
 
     map_frame: map
@@ -13,7 +15,7 @@ ekf_filter_node_odom:
     base_link_frame: base_footprint # the frame id used by the turtlebot's diff drive plugin
     world_frame: odom
 
-    odom0: odom
+    odom0: diff_cont/odom
     odom0_config: [false, false, false,
                   false, false, false,
                   true,  true,  true,
@@ -23,7 +25,7 @@ ekf_filter_node_odom:
     odom0_differential: false
     odom0_relative: false
 
-    imu0: imu
+    imu0: imu_data
     imu0_config: [false, false, false,
                   false,  false,  true,
                   false, false, false,
@@ -32,7 +34,8 @@ ekf_filter_node_odom:
     imu0_differential: false  # If using a real robot you might want to set this to true, since usually absolute measurements from real imu's are not very accurate
     imu0_relative: false
     imu0_queue_size: 10
-    imu0_remove_gravitational_acceleration: true
+    #imu0_remove_gravitational_acceleration: true
+    imu0_remove_gravitational_acceleration: false
 
     use_control: false
 
@@ -54,7 +57,8 @@ ekf_filter_node_odom:
 
 ekf_filter_node_map:
   ros__parameters:
-    frequency: 30.0
+    frequency: 10.0
+    sensor_timeout: 0.5
     two_d_mode: true  # Recommended to use 2d mode for nav2 in mostly planar environments
     print_diagnostics: true
     debug: false
@@ -65,7 +69,7 @@ ekf_filter_node_map:
     base_link_frame: base_footprint # the frame id used by the turtlebot's diff drive plugin
     world_frame: map
 
-    odom0: odom
+    odom0: diff_cont/odom
     odom0_config: [false, false, false,
                   false, false, false,
                   true,  true,  true,
@@ -85,7 +89,7 @@ ekf_filter_node_map:
     odom1_differential: false
     odom1_relative: false
 
-    imu0: imu
+    imu0: imu_data
     imu0_config: [false, false, false,
                   false,  false,  true,
                   false, false, false,
@@ -94,7 +98,8 @@ ekf_filter_node_map:
     imu0_differential: false  # If using a real robot you might want to set this to true, since usually absolute measurements from real imu's are not very accurate
     imu0_relative: false
     imu0_queue_size: 10
-    imu0_remove_gravitational_acceleration: true
+    #imu0_remove_gravitational_acceleration: true
+    imu0_remove_gravitational_acceleration: false
 
     use_control: false
 
@@ -118,7 +123,7 @@ navsat_transform:
   ros__parameters:
     frequency: 30.0
     delay: 3.0
-    magnetic_declination_radians: 0.0
+    magnetic_declination_radians: 0.09308
     yaw_offset: 0.0
     zero_altitude: true
     broadcast_utm_transform: true

@@ -26,6 +26,8 @@ def generate_launch_description():
     rl_params_file = os.path.join(
         gps_wpf_dir, "config", "dual_ekf_navsat_params.yaml")
 
+    b_use_sim_time = False
+
     return LaunchDescription(
         [
             launch.actions.DeclareLaunchArgument(
@@ -39,7 +41,8 @@ def generate_launch_description():
                 executable="ekf_node",
                 name="ekf_filter_node_odom",
                 output="screen",
-                parameters=[rl_params_file, {"use_sim_time": True}],
+                #parameters=[rl_params_file, {"use_sim_time": True}],
+                parameters=[rl_params_file, {"use_sim_time": b_use_sim_time}],
                 remappings=[("odometry/filtered", "odometry/local")],
             ),
             launch_ros.actions.Node(
@@ -47,7 +50,8 @@ def generate_launch_description():
                 executable="ekf_node",
                 name="ekf_filter_node_map",
                 output="screen",
-                parameters=[rl_params_file, {"use_sim_time": True}],
+                #parameters=[rl_params_file, {"use_sim_time": True}],
+                parameters=[rl_params_file, {"use_sim_time": b_use_sim_time}],
                 remappings=[("odometry/filtered", "odometry/global")],
             ),
             launch_ros.actions.Node(
@@ -55,13 +59,14 @@ def generate_launch_description():
                 executable="navsat_transform_node",
                 name="navsat_transform",
                 output="screen",
-                parameters=[rl_params_file, {"use_sim_time": True}],
+                #parameters=[rl_params_file, {"use_sim_time": True}],
+                parameters=[rl_params_file, {"use_sim_time": b_use_sim_time}],
                 remappings=[
-                    ("imu/data", "imu/data"),
-                    ("gps/fix", "gps/fix"),
+                    ("imu/data", "imu_data"),
+                    ("gps/fix", "ublox_gps_node/fix"), #("gps/fix", "gps/fix"),
                     ("gps/filtered", "gps/filtered"),
                     ("odometry/gps", "odometry/gps"),
-                    ("odometry/filtered", "odometry/global"),
+                    ("odometry/filtered", "odometry/global"), #("odometry/filtered", "odometry/global"),
                 ],
             ),
         ]

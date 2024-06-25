@@ -28,9 +28,9 @@ def generate_launch_description():
     launch_dir = os.path.join(gps_wpf_dir, 'launch')
     world = os.path.join(gps_wpf_dir, "worlds", "sonoma_raceway.world")
 
-    urdf = os.path.join(gps_wpf_dir, 'urdf', 'turtlebot3_waffle_gps.urdf')
-    with open(urdf, 'r') as infp:
-        robot_description = infp.read()
+    #urdf = os.path.join(gps_wpf_dir, 'urdf', 'turtlebot3_waffle_gps.urdf')
+    #with open(urdf, 'r') as infp:
+    #    robot_description = infp.read()
 
     models_dir = os.path.join(gps_wpf_dir, "models")
     models_dir += os.pathsep + \
@@ -58,12 +58,12 @@ def generate_launch_description():
         cmd=['gzclient'],
         cwd=[launch_dir], output='both')
 
-    start_robot_state_publisher_cmd = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='both',
-        parameters=[{'robot_description': robot_description}])
+    #start_robot_state_publisher_cmd = Node(
+    #    package='robot_state_publisher',
+    #    executable='robot_state_publisher',
+    #    name='robot_state_publisher',
+    #    output='both',
+    #    parameters=[{'robot_description': robot_description}])
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -77,6 +77,6 @@ def generate_launch_description():
     ld.add_action(start_gazebo_client_cmd)
 
     # robot state publisher launch
-    ld.add_action(start_robot_state_publisher_cmd)
+    #ld.add_action(start_robot_state_publisher_cmd)
 
     return ld

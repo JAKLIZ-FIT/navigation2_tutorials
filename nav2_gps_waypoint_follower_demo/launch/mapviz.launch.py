@@ -22,7 +22,7 @@ def generate_launch_description():
             executable="initialize_origin.py",
             name="initialize_origin",
             remappings=[
-                ("fix", "gps/fix"),
+                ("fix", "ublox_gps_node/fix"), #("fix", "gps/fix"),
             ],
         ),
         launch_ros.actions.Node(
