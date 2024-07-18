@@ -1,6 +1,9 @@
 from shapely.geometry import Polygon, Point, LineString
 import numpy as np
 import math
+import os
+import sys
+import yaml
 
 from pyproj import Proj, transform
 
@@ -254,6 +257,22 @@ class MyRowPlanner():
         return waypoint_list_gps
 
 
+    def log_waypoint_path(self, waypoints: dict, logging_file_path):
+        """
+        Function to save a waypoint path to a file
+        """
+        wps = {"waypoints" : waypoints}
+        try:
+            with open(logging_file_path, 'w') as yaml_file:
+                yaml.dump(wps, yaml_file, default_flow_style=False)
+        except Exception as ex:
+            print("Error", f"Error logging position: {str(ex)}")
+            return
+
+        print("Info", "Waypoint path logged succesfully")
+
+
+
     def add_row_line_with_intersect(self, row_line : MyLine, row_num, int_point):
         if row_num in self.row_dict.keys():
             print(f"row line {row_num} already saved, adding int_point")
@@ -356,7 +375,13 @@ def main(args=None):
     areaSel = MyRowPlanner(gps_waypoints, gps_robot)
     waypoint_list_gps  = areaSel.generate_row_path() 
 
-    
+    default_yaml_file_path = os.path.expanduser("~/gps_row_path_waypoints.yaml")
+    if len(sys.argv) > 1:
+        yaml_file_path = sys.argv[1]
+    else:
+        yaml_file_path = default_yaml_file_path
+
+    areaSel.log_waypoint_path(waypoint_list_gps, yaml_file_path)
 
 if __name__ == '__main__':
     main()
