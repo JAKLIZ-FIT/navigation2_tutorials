@@ -104,7 +104,8 @@ controller_server:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      # yaw_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.5
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -299,7 +300,8 @@ waypoint_follower:
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: True
+      # enabled: True
+      enabled: False
       waypoint_pause_duration: 200
 
 velocity_smoother:
