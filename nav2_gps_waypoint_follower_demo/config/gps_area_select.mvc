@@ -1,0 +1,71 @@
+capture_directory: "~"
+fixed_frame: map
+target_frame: map
+fix_orientation: false
+rotate_90: false
+enable_antialiasing: true
+show_displays: true
+show_status_bar: true
+show_capture_tools: true
+window_width: 1850
+window_height: 1016
+view_scale: 0.564473748
+offset_x: -55.0469894
+offset_y: -4.65194941
+use_latest_transforms: true
+background: "#a0a0a4"
+image_transport: raw
+displays:
+  - type: mapviz_plugins/tile_map
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      custom_sources:
+        []
+      bing_api_key: Ajw2PC6_8TvlDwk0Ttasn-BqdyPrywd5wuGHh8v6RFTpuWKgfvIVKoAF4H7VwR17
+      source: Bing Maps (terrain)
+  - type: mapviz_plugins/point_click_publisher
+    name: new display
+    config:
+      visible: false
+      collapsed: false
+      topic: clicked_point
+      output_frame: wgs84
+  - type: mapviz_plugins/tf_frame
+    name: new display
+    config:
+      visible: true
+      collapsed: false
+      frame: base_link
+      color: "#00ff00"
+      draw_style: arrows
+      position_tolerance: 0
+      buffer_size: 1
+      static_arrow_sizes: true
+      arrow_size: 53
+  - type: mapviz_plugins/navsat
+    name: Rover position
+    config:
+      visible: true
+      collapsed: false
+      topic: /ublox_gps_node/fix
+      color: "#55aaff"
+      draw_style: lines
+      position_tolerance: 0
+      buffer_size: 3600
+  - type: mapviz_plugins/draw_polygon
+    name: Work Area
+    config:
+      visible: true
+      collapsed: false
+      frame: wgs84
+      polygon_topic: /selected_area
+      color: "#c061cb"
+  - type: mapviz_plugins/path
+    name: Planned work path
+    config:
+      visible: true
+      collapsed: false
+      topic: /planned_path
+      color: "#dc8add"

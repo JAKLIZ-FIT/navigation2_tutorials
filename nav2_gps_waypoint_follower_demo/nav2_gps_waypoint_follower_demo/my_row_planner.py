@@ -7,6 +7,17 @@ import yaml
 
 from pyproj import Proj, transform
 
+class MySimpleWaypointGPS():
+    def __init__(self, lat, lon, yaw) -> None:
+        self.latitude = lat
+        self.longtitude = lon
+        self.yaw = yaw
+
+class MySimpleWaypointLocal():
+    def __init__(self, x, y, yaw) -> None:
+        self.x = x
+        self.y = y
+        self.yaw = yaw
 
 
 class FieldEdge():
@@ -33,9 +44,11 @@ class MyLine():
     def __init__(self,k,q) -> None:
         self.k = k
         self.q = q
-        self.angle_rad = math.atan(self.k)
+        self.angle_rad = math.atan(self.k) # in range 
         self.id = 0
         self.intersectPoints = []
+        self.heading = 0 # this is for oriented row_path, in range 0,2*Pi
+        # will be initialized when creating final path
 
     def intersection(self, edge: FieldEdge = None, k2=0, q2=0):
         if edge != None:
@@ -57,6 +70,28 @@ class MyLine():
     def get_y(self,x):
         return self.k*x + self.q
     
+    def compute_heading(self,direction) -> None:
+        p1 = self.intersectPoints[0]
+        p2 = self.intersectPoints[1]
+
+        if direction == -1:
+            p1,p2 = p2,p1
+
+        heading = 0.0
+
+        if p1.x < p2.x:
+            heading = self.angle_rad
+        else:
+            heading = self.angle_rad + math.pi
+
+        if heading > 2*math.pi:
+            heading -= 2*math.pi
+        if heading < 0.0:
+            heading += 2*math.pi
+
+        self.heading = heading
+
+    
     def generate_intermediate_waypoints(self, direction, waypoint_spacing):
         # TODO this will have to be modified for more complex shapes 
         # or just have lines with 2 intersection points
@@ -67,11 +102,31 @@ class MyLine():
         waypoint_cnt = (int) (ab_line.length / waypoint_spacing)
         waypoints = []
         for i in range(waypoint_cnt):
-            waypoints.append[ab_line.interpolate( i * waypoint_spacing )]
+            wpi = ab_line.interpolate( (i+1) * waypoint_spacing)
+            waypoints.append( MySimpleWaypointLocal(wpi.x,wpi.y,self.heading) )
 
         return waypoints
+    
+    def to_waypoints(self, direction, generate_intermediate : bool, waypoint_spacing):
+        if direction not in [-1,1]:
+            return []
+        
+        self.compute_heading(direction)
+        
+        first_wp = self.intersectPoints[1] if direction==-1 else self.intersectPoints[0]
+        last_wp =  self.intersectPoints[0] if direction==-1 else self.intersectPoints[1]
+        
+        wps = [MySimpleWaypointLocal(first_wp.x,first_wp.y,self.heading)]
+        
+        if generate_intermediate:
+            wps.extend(self.generate_intermediate_waypoints(direction,waypoint_spacing))
+        
+        wps.append(MySimpleWaypointLocal(last_wp.x,last_wp.y,self.heading))
+        return wps    
 
-def get_paralel_line(line, offset):
+
+
+def get_paralel_line(line : MyLine, offset):
     row_width_in_y = offset / math.cos(line.angle_rad)
     return MyLine(line.k,line.q+row_width_in_y)
 
@@ -101,7 +156,7 @@ class MyRowPlanner():
         self.min_y = min(y_coords)
         self.max_y = max(y_coords)
 
-    def generate_row_path(self):
+    def generate_row_path(self, generate_intermediate_wps=True):
         pass
         # compute robot position??
         # lets assume we have coordinates in map frame
@@ -187,7 +242,7 @@ class MyRowPlanner():
 
         for i,edge in enumerate(self.edge_list):
             print(f"\nProcessing edge {i} ({edge.vertex1.x},{edge.vertex1.y})-({edge.vertex2.x},{edge.vertex2.y})\n")
-            # generate parallel line
+            # generate parallel linegenerate_intermediate
             path_line = get_paralel_line(self.base_edge, row_num*self.row_width)
             print(f"paralel {row_num}: k={path_line.k} q={path_line.q} angle={path_line.angle_rad}")
             # test up/down
@@ -240,30 +295,37 @@ class MyRowPlanner():
         for k, v in self.row_dict.items():
             print(f"row line {k}: {v.id}, {v.intersectPoints[0]}, {v.intersectPoints[1]}")
         
-            if direction == -1:
-                direction *= -1
-                waypoint_list_local.append(v.intersectPoints[1])
-                waypoint_list_local.append(v.intersectPoints[0])
-            elif direction == 1:
-                direction *= -1
-                waypoint_list_local.append(v.intersectPoints[0])
-                waypoint_list_local.append(v.intersectPoints[1])
+            waypoint_list_local.extend(v.to_waypoints(direction=direction,
+                                                      generate_intermediate=generate_intermediate_wps,
+                                                      waypoint_spacing=self.waypoint_spacing))
+            direction *= -1
 
+            # if direction == -1:
+            #     direction *= -1
+            #     waypoint_list_local.append(MySimpleWaypointLocal( v.intersectPoints[1].x,v.intersectPoints[1].y,0) )
+            #     waypoint_list_local.append(MySimpleWaypointLocal( v.intersectPoints[0].x,v.intersectPoints[0].y,0) )
+            # elif direction == 1:
+            #     direction *= -1
+            #     waypoint_list_local.append(MySimpleWaypointLocal( v.intersectPoints[0].x,v.intersectPoints[0].y,0) )
+            #     waypoint_list_local.append(MySimpleWaypointLocal( v.intersectPoints[1].x,v.intersectPoints[1].y,0) )
+            
         #waypoint_list_local = [(w.x,w.y) for w in waypoint_list_local]
-        #print(waypoint_list_local)
+        print(waypoint_list_local)
         
-        waypoint_list_gps = [self.coordTransform.local_to_gps(w.x, w.y) for w in waypoint_list_local]
-        
+        waypoint_list_gps = [self.coordTransform.local_to_gps(w.x, w.y, w.yaw) for w in waypoint_list_local]
+
+        print(waypoint_list_gps)
+
         return waypoint_list_gps
 
 
-    def log_waypoint_path(self, waypoints: dict, logging_file_path):
+    def log_waypoint_path(self, waypoints: list, logging_file_path):
         """
         Function to save a waypoint path to a file
         """
-        wps = {"waypoints" : waypoints}
+        wps = {"waypoints" : [{"latitude": wp["lat"],"longitude": wp["lon"], "yaw": wp["yaw"]} for wp in waypoints] }
         try:
-            with open(logging_file_path, 'w') as yaml_file:
+            with open(logging_file_path, 'w+') as yaml_file:
                 yaml.dump(wps, yaml_file, default_flow_style=False)
         except Exception as ex:
             print("Error", f"Error logging position: {str(ex)}")
@@ -329,8 +391,8 @@ class MyCoordTransformer():
         northing = self.ref_northing + local_y
         
         # Convert UTM coordinates back to latitude and longitude
-        lon, lat = transform(self.proj_utm, self.proj_latlon, easting, northing)
-        return lat, lon
+        lat, lon = transform(self.proj_utm, self.proj_latlon, easting, northing)
+        return {"lat":lat, "lon":lon, "yaw":heading}
 
     # modified code from chatGPT
     def gps_to_local(self,lat, lon):
@@ -370,10 +432,21 @@ def main(args=None):
         (49.601610807601766, 15.941046855492976),
         (49.6015680749143, 15.940881756139369)
     ]
+
+    demo_gps_waypoints = [
+        (49.6014738,15.9407508),
+        (49.6014249,15.9407551),
+        (49.6014204,15.9406917),
+        (49.6014779,15.9406813)
+    ]
+
+    # TODO remove 
+    gps_waypoints = demo_gps_waypoints
+
     gps_robot = gps_waypoints[0]
 
     areaSel = MyRowPlanner(gps_waypoints, gps_robot)
-    waypoint_list_gps  = areaSel.generate_row_path() 
+    waypoint_list_gps  = areaSel.generate_row_path(generate_intermediate_wps=True) 
 
     default_yaml_file_path = os.path.expanduser("~/gps_row_path_waypoints.yaml")
     if len(sys.argv) > 1:
