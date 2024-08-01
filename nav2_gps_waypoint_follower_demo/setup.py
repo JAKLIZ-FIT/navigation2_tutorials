@@ -33,7 +33,7 @@ setup(
             'gps_waypoint_logger = nav2_gps_waypoint_follower_demo.gps_waypoint_logger:main',
             'row_compute = nav2_gps_waypoint_follower_demo.row_path_compute:main',
             'row_planner = nav2_gps_waypoint_follower_demo.my_row_planner:main',
-            'gps_position_logger = nav2_gps_waypoint_follower_demo.gps_poistion_logger:main'
+            'gps_position_logger = nav2_gps_waypoint_follower_demo.gps_position_logger:main'
         ],
     },
 )

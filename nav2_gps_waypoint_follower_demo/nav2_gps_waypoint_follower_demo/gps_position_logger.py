@@ -51,7 +51,7 @@ class GpsLogger(Node):
                 print("reached target number of positions")
                 self.reached_target = True
                 self.calculate_metrics()
-                # self.log_positions()
+                self.log_positions()
                 
 
     def calculate_metrics(self):
@@ -70,7 +70,7 @@ class GpsLogger(Node):
         df_local = pd.DataFrame(self.local_pos_list, columns=col_names)
         print(df_local.describe())
 
-        df_local.to_csv("gps_pos_log_localCoord.csv")
+        df_local.to_csv(os.path.expanduser("~/gps_pos_log_localCoord.csv"))
 
 
 
@@ -103,18 +103,16 @@ def main(args=None):
     rclpy.init(args=args)
 
     # allow to pass the logging path as an argument
-    default_yaml_file_path = os.path.expanduser("~/gps_waypoints.yaml")
+    default_yaml_file_path = os.path.expanduser("~/gps_positions.yaml")
     if len(sys.argv) > 1:
         yaml_file_path = sys.argv[1]
     else:
         yaml_file_path = default_yaml_file_path
 
-    gps_gui_logger = GpsGuiLogger(yaml_file_path)
+    gps_logger = GpsLogger(yaml_file_path)
 
     while rclpy.ok():
-        # we spin both the ROS system and the interface
-        rclpy.spin_once(gps_gui_logger, timeout_sec=0.1)  # Run ros2 callbacks
-        gps_gui_logger.update()  # Update the tkinter interface
+        rclpy.spin_once(gps_logger, timeout_sec=0.1)  # Run ros2 callbacks
 
     rclpy.shutdown()
 
